@@ -67,9 +67,9 @@ func randomFloat(min, max float32) (v float32, a float32, l float32, w float32) 
 }
 
 // TYPE 1, get all columns
-func type1(query1, query2 string) ([]string, []string) {
+func type1(query1, query2 string) {
 	db := dbConnec()
-	var out, out1 []string
+	//var out, out1 []string
 	rows, err := db.Query(query1) //FROM sensors
 	if err != nil {
 		panic(err.Error())
@@ -81,8 +81,8 @@ func type1(query1, query2 string) ([]string, []string) {
 		if err != nil {
 			panic(err.Error())
 		}
-		out = append(out, (fmt.Sprintf("Voltage: %s  Current: %s   Luminosity: %s   Wind Speed: %s\n", voltage, ac, luminosity, wind)))
-		//log.Println("Voltage:", voltage, " Current:", ac, "  Luminosity:", luminosity, "  Wind Speed:", wind)
+		//out = append(out, (fmt.Sprintf("Voltage: %s  Current: %s   Luminosity: %s   Wind Speed: %s\n", voltage, ac, luminosity, wind)))
+		log.Println("Voltage:", voltage, " Current:", ac, "  Luminosity:", luminosity, "  Wind Speed:", wind)
 	}
 	rows1, err := db.Query(query2) //FROM cpuram
 	if err != nil {
@@ -95,10 +95,10 @@ func type1(query1, query2 string) ([]string, []string) {
 		if err != nil {
 			panic(err.Error())
 		}
-		out1 = append(out1, fmt.Sprintf("CPU: %f  RAM: %f\n", cpu, ram))
-		//log.Println("CPU:", cpu, " RAM:", ram)
+		//out1 = append(out1, fmt.Sprintf("CPU: %f  RAM: %f\n", cpu, ram))
+		log.Println("CPU:", cpu, " RAM:", ram)
 	}
-	return out, out1
+	//return out, out1
 }
 
 // 1 Column from cpuram Table
@@ -640,7 +640,7 @@ func type2CR2S2(query1, query2, split1, split2, split3, split4 string, inputType
 			panic(err.Error())
 		}
 		if inputType == 2 {
-			log.Println(split2, ":", z, " ", split3, ":", w)
+			log.Println(split3, ":", z, " ", split4, ":", w)
 		}
 		if inputType == 3 {
 			if sumSens1, err := strconv.ParseFloat(z, 32); err == nil {
@@ -701,7 +701,7 @@ func type2CR2S3(query1, query2, split1, split2, split3, split4, split5 string, i
 			panic(err.Error())
 		}
 		if inputType == 2 {
-			log.Println(split2, ":", z, " ", split3, ":", w, split4, ":", k)
+			log.Println(split3, ":", z, " ", split4, ":", w, split5, ":", k)
 		}
 		if inputType == 3 {
 			if sumSens1, err := strconv.ParseFloat(z, 32); err == nil {
@@ -850,7 +850,7 @@ func main() {
 		if strings.Compare("1", splitBuf[0]) == 0 { // TYPE 1->SELECT last N rows of all variables. ! Query for each table
 			query1 := fmt.Sprintf("SELECT voltage, ac, luminosity, wind FROM sensors ORDER BY times DESC LIMIT %s", Nrows)
 			query2 := fmt.Sprintf("SELECT cpu, ram FROM cpuram ORDER BY timest DESC LIMIT %s", Nrows)
-			log.Println(type1(query1, query2))
+			type1(query1, query2)
 
 		}
 		/////////**********TYPE2*******************////////
@@ -869,6 +869,9 @@ func main() {
 						boolean2 = true
 					}
 				}
+			}
+			if len(splitBuf) < 3 {
+				log.Println("You should have at least one variable")
 			}
 			total := cpuramCount + sensorsCount
 			if total < len(splitBuf)-2 {

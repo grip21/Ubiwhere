@@ -67,9 +67,9 @@ func randomFloat(min, max float32) (v float32, a float32, l float32, w float32) 
 }
 
 // TYPE 1, get all columns
-func type1(query1, query2 string) {
+func type1(query1, query2 string) (x, y []string) {
 	db := dbConnec()
-	//var out, out1 []string
+	var out, out1 []string
 	rows, err := db.Query(query1) //FROM sensors
 	if err != nil {
 		panic(err.Error())
@@ -81,7 +81,7 @@ func type1(query1, query2 string) {
 		if err != nil {
 			panic(err.Error())
 		}
-		//out = append(out, (fmt.Sprintf("Voltage: %s  Current: %s   Luminosity: %s   Wind Speed: %s\n", voltage, ac, luminosity, wind)))
+		out = append(out, (fmt.Sprintf("Voltage: %s  Current: %s   Luminosity: %s   Wind Speed: %s\n", voltage, ac, luminosity, wind)))
 		log.Println("Voltage:", voltage, " Current:", ac, "  Luminosity:", luminosity, "  Wind Speed:", wind)
 	}
 	rows1, err := db.Query(query2) //FROM cpuram
@@ -95,10 +95,10 @@ func type1(query1, query2 string) {
 		if err != nil {
 			panic(err.Error())
 		}
-		//out1 = append(out1, fmt.Sprintf("CPU: %f  RAM: %f\n", cpu, ram))
+		out1 = append(out1, fmt.Sprintf("CPU: %f  RAM: %f\n", cpu, ram))
 		log.Println("CPU:", cpu, " RAM:", ram)
 	}
-	//return out, out1
+	return out, out1
 }
 
 // 1 Column from cpuram Table
@@ -721,10 +721,11 @@ func type2CR2S3(query1, query2, split1, split2, split3, split4, split5 string, i
 }
 
 //2 columns from  CPURAM and 4 columns from SENSORS
-func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 string, inputType int) {
+func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 string, inputType int) (a, b []string) {
 	db := dbConnec()
 	rows, err := db.Query(query1)
 	defer rows.Close()
+	var out, out1 []string
 	var sumCR1, sumCR2, sumS1, sumS2, sumS3, sumS4, f, s float64
 	if err != nil {
 		panic(err.Error())
@@ -737,6 +738,7 @@ func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 s
 			panic(err.Error())
 		}
 		if inputType == 2 {
+			out = append(out1, fmt.Sprintf("CPU: %s  RAM: %s\n", x, y))
 			log.Println(split1, ":", x, split2, ":", y)
 		}
 		if inputType == 3 {
@@ -749,6 +751,7 @@ func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 s
 		}
 	}
 	if inputType == 3 {
+		out = append(out1, fmt.Sprintf("Average CPU: %f, Average RAM: %f\n", sumCR1/f, sumCR2/f))
 		log.Println("Average", split1, ": ", sumCR1/f, "Average", split2, ": ", sumCR2/f)
 	}
 
@@ -764,6 +767,7 @@ func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 s
 			panic(err.Error())
 		}
 		if inputType == 2 {
+			out1 = append(out1, fmt.Sprintf("%s: %s,  %s:%s,  %s:%s,  %s:%s\n", split3, z, split4, w, split5, k, split6, r))
 			log.Println(split3, ":", z, " ", split4, ":", w, split5, ":", k, split6, ":", r)
 		}
 		if inputType == 3 {
@@ -782,8 +786,10 @@ func type2CR2S4(query1, query2, split1, split2, split3, split4, split5, split6 s
 		}
 	}
 	if inputType == 3 {
+		out1 = append(out1, fmt.Sprintf(" Average %s: %f,  Average %s:%f,  Average %s:%f,  Average %s:%f\n", split3, sumS1/s, split4, sumS2/s, split5, sumS3/s, split6, sumS4/s))
 		log.Println("Average", split3, ": ", sumS1/s, "Average", split4, ": ", sumS2/s, "Average", split5, ": ", sumS3/s, "Average", split6, ": ", sumS4/s)
 	}
+	return out, out1
 }
 
 func main() {
@@ -804,12 +810,12 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Welcome to This Challenge")
 	fmt.Println("---------------------")
-	fmt.Println("Choose one of four input types!")
+	log.Println("Choose one of four input types!")
 	log.Println("If you want obtain from your PC, the CPU and RAM usage percentage. Input -> '0' ")
-	fmt.Println("If you want the last 'X' (integer number) samples of the variables press 1 followed by the number of samples (Input example)-> 1 'X'")
-	fmt.Println("If you want the last 'X' (integer number) samples of the variables press 1 followed by the number " +
+	log.Println("If you want the last 'X' (integer number) samples of the variables press 1 followed by the number of samples (Input example)-> 1 'X'")
+	log.Println("If you want the last 'X' (integer number) samples of the variables press 1 followed by the number " +
 		"of samples and the types of available variables (Input example)-> 2 'X' 'cpu' 'ram' 'voltage' 'ac' 'luminosity' 'wind'")
-	fmt.Println("If you want to get an average of the value of one or more variables (Input example)-> 3 'cpu' 'ram' 'voltage' 'ac' 'luminosity' 'wind'")
+	log.Println("If you want to get an average of the value of one or more variables (Input example)-> 3 'cpu' 'ram' 'voltage' 'ac' 'luminosity' 'wind'")
 
 	for {
 		fmt.Print("-> ")
